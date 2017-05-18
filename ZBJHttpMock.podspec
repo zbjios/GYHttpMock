@@ -1,12 +1,12 @@
 Pod::Spec.new do |s|
   s.name             = "ZBJHttpMock"
-  s.version          = "1.1.0"
+  s.version          = "1.1.1"
   s.summary          = "Library for replace part/all HTTP response based Nocilla."
 
-  s.homepage         = "https://github.com/hypoyao/GYHttpMock"
+  s.homepage         = "https://github.com/zbjios/GYHttpMock"
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { "hypoyao" => "hypoyao@qq.com" }
-  s.source           = { :git => "https://github.com/zbjios/GYHttpMock.git", :tag => "1.0.0" }
+  s.source           = { :git => "https://github.com/zbjios/GYHttpMock.git", :tag => s.version }
   s.platform     = :ios, '7.0'
   s.requires_arc = true
   s.source_files = '**/*.{h,m}'
