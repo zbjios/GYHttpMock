@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = "ZBJHttpMock"
-  s.version          = "1.1.1"
+  s.version          = "1.2.0"
   s.summary          = "Library for replace part/all HTTP response based Nocilla."
 
   s.homepage         = "https://github.com/zbjios/GYHttpMock"
