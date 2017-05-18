@@ -42,8 +42,7 @@
     
     if (stubbedResponse.shouldFail) {
         [client URLProtocol:self didFailWithError:stubbedResponse.error];
-    }
-    else if (stubbedResponse.isUpdatePartResponseBody) {
+    } else if (stubbedResponse.isUpdatePartResponseBody) {
         stubbedResponse.shouldNotMockAgain = YES;
         NSOperationQueue *queue = [[NSOperationQueue alloc]init];
         [NSURLConnection sendAsynchronousRequest:request
@@ -54,27 +53,24 @@
                                        [client URLProtocol:self didFailWithError:[NSError errorWithDomain:NSCocoaErrorDomain code:NSUserCancelledError userInfo:nil]];
                                    }else{
                                        
-                                       id json = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
-                                       NSMutableDictionary *result = [NSMutableDictionary dictionaryWithDictionary:json];
-                                       if (!error && json) {
-                                           NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:stubbedResponse.body options:NSJSONReadingMutableContainers error:nil];
-                                           
-                                           [self addEntriesFromDictionary:dict to:result];
+                                       // 请求回来的数据
+                                       id remote = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&error];
+                                       
+                                       if (!error && remote) {
+                                           id local = [NSJSONSerialization JSONObjectWithData:stubbedResponse.body options:NSJSONReadingMutableContainers error:nil];
+                                           remote = [self addEntriesFrom:remote to:local];
                                        }
                                        
-                                       NSData *combinedData = [NSJSONSerialization dataWithJSONObject:result options:NSJSONWritingPrettyPrinted error:nil];
+                                       NSData *combinedData = [NSJSONSerialization dataWithJSONObject:remote options:NSJSONWritingPrettyPrinted error:nil];
                                        
-                                       
-                                       [client URLProtocol:self didReceiveResponse:response
-                                        cacheStoragePolicy:NSURLCacheStorageNotAllowed];
+                                       [client URLProtocol:self didReceiveResponse:response cacheStoragePolicy:NSURLCacheStorageNotAllowed];
                                        [client URLProtocol:self didLoadData:combinedData];
                                        [client URLProtocolDidFinishLoading:self];
                                    }
                                    stubbedResponse.shouldNotMockAgain = NO;
                                }];
         
-    }
-    else {
+    } else {
         NSHTTPURLResponse* urlResponse = [[NSHTTPURLResponse alloc] initWithURL:request.URL statusCode:stubbedResponse.statusCode HTTPVersion:@"1.1" headerFields:stubbedResponse.headers];
         
         if (stubbedResponse.statusCode < 300 || stubbedResponse.statusCode > 399
@@ -109,8 +105,25 @@
 - (void)stopLoading {
 }
 
-- (void)addEntriesFromDictionary:(NSDictionary *)dict to:(NSMutableDictionary *)targetDict
-{
+- (id)addEntriesFrom:(id)remote to:(id)local {
+    if ([remote isKindOfClass:[NSDictionary class]] && [local isKindOfClass:[NSDictionary class]]) {
+        [self addEntriesFromDictionary:local to:remote];
+        return remote;
+    } else if ([remote isKindOfClass:[NSArray class]]) {
+        NSMutableArray *tempArr = [NSMutableArray arrayWithArray:remote];
+        if ([local isKindOfClass:[NSArray class]]) {
+            [tempArr addObjectsFromArray:local];
+        } else {
+            [tempArr addObject:local];
+        }
+        return  [tempArr copy];
+    } else {
+        [NSException raise:NSInvalidArgumentException format:@"[TYPE CONFLICT] : remote response is [%@] and local response is [%@]", [remote class], [local class]];
+        return nil;
+    }
+}
+
+- (void)addEntriesFromDictionary:(NSDictionary *)dict to:(NSMutableDictionary *)targetDict {
     for (NSString *key in dict) {
         if (!targetDict[key] || [dict[key] isKindOfClass:[NSString class]] || [dict[key] isKindOfClass:[NSNumber class]]) {
             [targetDict addEntriesFromDictionary:dict];
